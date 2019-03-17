@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: haproxy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: haproxy
+  template:
+    metadata:
+      labels:
+        app: haproxy
+    spec:
+      containers:
+      - name: container-haproxy
+        image: haproxy
+        ports:
+        - name: write
+          containerPort: 5432
+        - name: read
+          containerPort: 5433
+        - name: admin
+          containerPort: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: haproxy-svc
+  labels:
+    app: haproxy
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: write-port
+  - port: 5433
+    targetPort: 5433
+    name: read-port
+  clusterIP: None
+  selector:
+    app: haproxy
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: haproxy-admin-svc
+  labels:
+    app: haproxy
+spec:
+  type: NodePort
+  ports:
+  - port: 1000
+    targetPort: 1000
+    nodePort: 31000
+    name: admin-port
+  selector:
+    app: haproxy
